@@ -44,6 +44,7 @@ namespace ConstellationObservation.EditorTools
                     {
                         Undo.RecordObject(controller, "Sync Planet Library");
                         controller.targets = (Transform[])libRef.library.targets.Clone();
+                        controller.planetNames = (string[])libRef.library.planetNames.Clone();
                         controller.highlightLights = (Light[])libRef.library.highlightLights.Clone();
                         controller.narrationClips = (AudioClip[])libRef.library.narrationClips.Clone();
                         EditorUtility.SetDirty(controller);

@@ -27,8 +27,10 @@ namespace ConstellationObservation
         [Tooltip("How long the cube grow/shrink animation takes, in seconds.")]
         public float cubeAnimDuration = 0.4f;
 
-        private Vector3 planetCubeFullScale;
-        private Vector3 constellationCubeFullScale;
+        [Tooltip("The cubes' normal (fully shown) scale. Fixed here instead of being read from the "
+            + "transform at runtime, since that reads whatever scale happened to be set at the moment "
+            + "Start() ran and could race against an early StartPlanetMode/StartConstellationMode call.")]
+        public Vector3 cubeFullScale = new Vector3(0.6f, 0.6f, 0.6f);
 
         // 0 = hidden, 1 = shown, animating toward animTarget
         private float animT = 1f;
@@ -37,9 +39,6 @@ namespace ConstellationObservation
 
         private void Start()
         {
-            if (planetCube != null) planetCubeFullScale = planetCube.transform.localScale;
-            if (constellationCube != null) constellationCubeFullScale = constellationCube.transform.localScale;
-
             SetCubesActiveImmediate(true);
             if (solarSystemRoot != null) solarSystemRoot.SetActive(true);
             if (constellationsRoot != null) constellationsRoot.SetActive(false);
@@ -66,8 +65,8 @@ namespace ConstellationObservation
 
         private void ApplyCubeScale(float t)
         {
-            if (planetCube != null) planetCube.transform.localScale = planetCubeFullScale * t;
-            if (constellationCube != null) constellationCube.transform.localScale = constellationCubeFullScale * t;
+            if (planetCube != null) planetCube.transform.localScale = cubeFullScale * t;
+            if (constellationCube != null) constellationCube.transform.localScale = cubeFullScale * t;
         }
 
         private void SetCubesActiveImmediate(bool active)

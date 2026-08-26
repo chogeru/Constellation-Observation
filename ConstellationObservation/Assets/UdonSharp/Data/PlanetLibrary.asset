@@ -43,12 +43,12 @@ MonoBehaviour:
   - {fileID: 0}
   - {fileID: 0}
   narrationClips:
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
+  - {fileID: 8300000, guid: 6e130b2928134724b84c3755003390bc, type: 3}
+  - {fileID: 8300000, guid: 4432fc3c8b6a42c4a9dbf4de0edb0bc2, type: 3}
+  - {fileID: 8300000, guid: e20ca5811749833469527903c11379ed, type: 3}
+  - {fileID: 8300000, guid: 5b1cdd3091254814d87175b7ed185cde, type: 3}
+  - {fileID: 8300000, guid: 083c878aa16adc54281e2b01fbef7daa, type: 3}
+  - {fileID: 8300000, guid: 3d552db5ff2badf409d5272e1c66d91a, type: 3}
+  - {fileID: 8300000, guid: 2286e672f66a39b4f8d2a50ad6d6fc02, type: 3}
+  - {fileID: 8300000, guid: 15ea720f98ab1634c932136fbdd71137, type: 3}
+  - {fileID: 8300000, guid: f14fe312899bc1242bc3e4b3a159e2f6, type: 3}

@@ -57,24 +57,24 @@ MonoBehaviour:
   - {fileID: 0}
   - {fileID: 0}
   narrationClips:
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
+  - {fileID: 8300000, guid: 0d068a1c84407bf4a917726a1ebe5e89, type: 3}
+  - {fileID: 8300000, guid: 9250b9017e0661d469d6d38647a6acda, type: 3}
+  - {fileID: 8300000, guid: 57f5267b6f3a2164eb10bd0ab12271ff, type: 3}
+  - {fileID: 8300000, guid: 2e80adfe21f81254b840d79eec38a1d8, type: 3}
+  - {fileID: 8300000, guid: 62504003d608f7242a95453dc6f285c3, type: 3}
+  - {fileID: 8300000, guid: 427dd59903890414c84855e6c3f8bfa6, type: 3}
+  - {fileID: 8300000, guid: 66feab2403307c84298bf53e56d0b568, type: 3}
+  - {fileID: 8300000, guid: 13f1358ed8109cf44bf3f365e0b4f959, type: 3}
+  - {fileID: 8300000, guid: e559d84cf7d444941b03240f8ea2d587, type: 3}
+  - {fileID: 8300000, guid: f88fe088263f4534888ea1451f35b1ed, type: 3}
+  - {fileID: 8300000, guid: 416fc7fd3d9cff04abb86eea2ce3c261, type: 3}
+  - {fileID: 8300000, guid: 9ddcb4df5dfb5fb42b60277200cecaf1, type: 3}
+  - {fileID: 8300000, guid: b2cf7709a888abd489bae0789bca531f, type: 3}
+  - {fileID: 8300000, guid: 4ae888430fe0e0e48a4e30c4e337ea29, type: 3}
+  - {fileID: 8300000, guid: 6d4a1931e91380e4f9b9f2eb6f14b85e, type: 3}
+  - {fileID: 8300000, guid: 042fb830a20fbff41a19c26155fe77e0, type: 3}
+  - {fileID: 8300000, guid: 5093038bad037b540b9e6fbdacd0bdd8, type: 3}
+  - {fileID: 8300000, guid: f31c5071dd7732944b6bee2f439b390e, type: 3}
+  - {fileID: 8300000, guid: 51e3e231f439d034f8ba5e8e6625819d, type: 3}
+  - {fileID: 8300000, guid: 40463816fb8f1b64f851d0e11d1db2cd, type: 3}
+  - {fileID: 8300000, guid: 510cdd73ec66bfb4299d4d23afbc3de6, type: 3}
