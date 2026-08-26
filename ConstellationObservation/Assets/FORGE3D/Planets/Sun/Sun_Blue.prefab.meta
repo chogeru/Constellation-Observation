@@ -1,0 +1,16 @@
+fileFormatVersion: 2
+guid: fbdf0846d4d383b46a7559034451d8e8
+timeCreated: 1518996599
+licenseType: Store
+NativeFormatImporter:
+  mainObjectFileID: 100100000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 26903
+  packageName: Planets
+  packageVersion: 1.54
+  assetPath: Assets/FORGE3D/Planets/Sun/Sun_Blue.prefab
+  uploadId: 638821

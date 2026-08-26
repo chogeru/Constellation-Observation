@@ -1,0 +1,16 @@
+fileFormatVersion: 2
+guid: 8434ab0323243e346bb9c66be1f451c2
+timeCreated: 1518995581
+licenseType: Store
+NativeFormatImporter:
+  mainObjectFileID: 100100000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 26903
+  packageName: Planets
+  packageVersion: 1.54
+  assetPath: Assets/FORGE3D/Planets/Thunderstorm/Planet_Thunderstorm_02.prefab
+  uploadId: 638821

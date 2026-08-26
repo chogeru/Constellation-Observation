@@ -1,0 +1,16 @@
+fileFormatVersion: 2
+guid: aa11ac6ac9dad884397e52ddf78752a8
+timeCreated: 1519321638
+licenseType: Store
+NativeFormatImporter:
+  mainObjectFileID: 100100000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 26903
+  packageName: Planets
+  packageVersion: 1.54
+  assetPath: Assets/FORGE3D/Planets/Terrestrial/Planet_Terrestrial_05.prefab
+  uploadId: 638821

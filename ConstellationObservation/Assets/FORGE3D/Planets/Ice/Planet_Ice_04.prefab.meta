@@ -1,0 +1,16 @@
+fileFormatVersion: 2
+guid: 0fade6951b518034c96bc8c1ef101c5c
+timeCreated: 1519346131
+licenseType: Store
+NativeFormatImporter:
+  mainObjectFileID: 100100000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 26903
+  packageName: Planets
+  packageVersion: 1.54
+  assetPath: Assets/FORGE3D/Planets/Ice/Planet_Ice_04.prefab
+  uploadId: 638821

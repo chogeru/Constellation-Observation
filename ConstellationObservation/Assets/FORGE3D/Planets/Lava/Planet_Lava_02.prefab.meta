@@ -1,0 +1,16 @@
+fileFormatVersion: 2
+guid: f234b5947b0f6cc488f699ae75dae5c8
+timeCreated: 1519346083
+licenseType: Store
+NativeFormatImporter:
+  mainObjectFileID: 100100000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 26903
+  packageName: Planets
+  packageVersion: 1.54
+  assetPath: Assets/FORGE3D/Planets/Lava/Planet_Lava_02.prefab
+  uploadId: 638821

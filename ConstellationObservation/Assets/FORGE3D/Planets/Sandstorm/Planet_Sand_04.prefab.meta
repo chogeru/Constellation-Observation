@@ -1,0 +1,16 @@
+fileFormatVersion: 2
+guid: e7f28df0b90637043904dcdd587f27c4
+timeCreated: 1519425393
+licenseType: Store
+NativeFormatImporter:
+  mainObjectFileID: 100100000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 26903
+  packageName: Planets
+  packageVersion: 1.54
+  assetPath: Assets/FORGE3D/Planets/Sandstorm/Planet_Sand_04.prefab
+  uploadId: 638821

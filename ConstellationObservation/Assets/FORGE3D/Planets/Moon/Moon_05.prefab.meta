@@ -1,0 +1,16 @@
+fileFormatVersion: 2
+guid: 410a1d0d1f92e55419267b00e37fad3f
+timeCreated: 1519321572
+licenseType: Store
+NativeFormatImporter:
+  mainObjectFileID: 100100000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 26903
+  packageName: Planets
+  packageVersion: 1.54
+  assetPath: Assets/FORGE3D/Planets/Moon/Moon_05.prefab
+  uploadId: 638821
