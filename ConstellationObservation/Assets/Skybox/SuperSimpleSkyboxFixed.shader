@@ -134,9 +134,58 @@ HLSLPROGRAM
 /* WARNING: $splice Could not find named fragment 'sgci_CustomInterpolatorPreInclude' */
 
 // Includes
+// patched: Shims.hlsl (below) itself includes Common.hlsl (which redefines GLOBAL_CBUFFER_START
+// to a 2-argument SRP ray-tracing form) and then UnityShaderVariables.cginc (which still calls
+// the classic single-argument form) BACK TO BACK internally - so patching *after* Shims.hlsl is
+// too late, the damage and the crash happen inside it. Pre-include Common.hlsl ourselves so its
+// include guard is already set, restore the single-argument macro, then let Shims.hlsl's own
+// "#include Common.hlsl" become a no-op (guarded) while its UnityShaderVariables.cginc include
+// sees our correct definition.
+#include "Packages/com.unity.render-pipelines.core/ShaderLibrary/Common.hlsl"
+#undef GLOBAL_CBUFFER_START
+#undef GLOBAL_CBUFFER_END
+#if defined(UNITY_STEREO_MULTIVIEW_ENABLED) || ((defined(UNITY_SINGLE_PASS_STEREO) || defined(UNITY_STEREO_INSTANCING_ENABLED)) && (defined(SHADER_API_GLCORE) || defined(SHADER_API_GLES3) || defined(SHADER_API_METAL)))
+    #define GLOBAL_CBUFFER_START(name)    cbuffer name {
+    #define GLOBAL_CBUFFER_END            }
+#else
+    #define GLOBAL_CBUFFER_START(name)    CBUFFER_START(name)
+    #define GLOBAL_CBUFFER_END            CBUFFER_END
+#endif
 #include "Packages/com.unity.shadergraph/Editor/Generation/Targets/BuiltIn/ShaderLibrary/Shim/Shims.hlsl"
 #include "Packages/com.unity.render-pipelines.core/ShaderLibrary/Color.hlsl"
+// patched: Core.hlsl (below) pulls in ShaderVariablesFunctions.hlsl, which - when
+// UNITY_SINGLE_PASS_STEREO is defined (true for any XR-capable build target) - redeclares
+// TransformStereoScreenSpaceTex() as a real function. Shims.hlsl already pulled in Unity's own
+// UnityCG.cginc above, which declares a byte-identical function of the same name under the same
+// condition, so this is a flat redefinition error. This skybox never calls either function (it's
+// boilerplate from the Shader Graph target template, not skybox-specific code), so it's safe to
+// briefly hide UNITY_SINGLE_PASS_STEREO from just this one include: ShaderVariablesFunctions.hlsl
+// then takes its non-stereo branch and skips its copy, while everything else it defines is still
+// included normally.
+#if defined(UNITY_SINGLE_PASS_STEREO)
+    #undef UNITY_SINGLE_PASS_STEREO
+    #define RESTORE_UNITY_SINGLE_PASS_STEREO_AFTER_CORE_HLSL
+#endif
 #include "Packages/com.unity.shadergraph/Editor/Generation/Targets/BuiltIn/ShaderLibrary/Core.hlsl"
+#if defined(RESTORE_UNITY_SINGLE_PASS_STEREO_AFTER_CORE_HLSL)
+    #undef RESTORE_UNITY_SINGLE_PASS_STEREO_AFTER_CORE_HLSL
+    #define UNITY_SINGLE_PASS_STEREO
+#endif
+// patched: com.unity.render-pipelines.core's Common.hlsl (pulled in by the Core.hlsl include
+// above) redefines GLOBAL_CBUFFER_START to take a (name, register) pair for SRP ray tracing.
+// Unity's own Built-in UnityShaderVariables.cginc - included transitively below via
+// Lighting.hlsl - still calls the classic single-argument GLOBAL_CBUFFER_START(UnityStereoGlobals),
+// which is exactly the "too few arguments to a macro call" compile error. Restore the original
+// single-argument Built-in RP definition before anything else needs it.
+#undef GLOBAL_CBUFFER_START
+#undef GLOBAL_CBUFFER_END
+#if defined(UNITY_STEREO_MULTIVIEW_ENABLED) || ((defined(UNITY_SINGLE_PASS_STEREO) || defined(UNITY_STEREO_INSTANCING_ENABLED)) && (defined(SHADER_API_GLCORE) || defined(SHADER_API_GLES3) || defined(SHADER_API_METAL)))
+    #define GLOBAL_CBUFFER_START(name)    cbuffer name {
+    #define GLOBAL_CBUFFER_END            }
+#else
+    #define GLOBAL_CBUFFER_START(name)    CBUFFER_START(name)
+    #define GLOBAL_CBUFFER_END            CBUFFER_END
+#endif
 #include "Packages/com.unity.render-pipelines.core/ShaderLibrary/Texture.hlsl"
 #include "Packages/com.unity.shadergraph/Editor/Generation/Targets/BuiltIn/ShaderLibrary/Lighting.hlsl"
 #include "Packages/com.unity.shadergraph/Editor/Generation/Targets/BuiltIn/Editor/ShaderGraph/Includes/LegacySurfaceVertex.hlsl"
@@ -1488,9 +1537,58 @@ HLSLPROGRAM
 /* WARNING: $splice Could not find named fragment 'sgci_CustomInterpolatorPreInclude' */
 
 // Includes
+// patched: Shims.hlsl (below) itself includes Common.hlsl (which redefines GLOBAL_CBUFFER_START
+// to a 2-argument SRP ray-tracing form) and then UnityShaderVariables.cginc (which still calls
+// the classic single-argument form) BACK TO BACK internally - so patching *after* Shims.hlsl is
+// too late, the damage and the crash happen inside it. Pre-include Common.hlsl ourselves so its
+// include guard is already set, restore the single-argument macro, then let Shims.hlsl's own
+// "#include Common.hlsl" become a no-op (guarded) while its UnityShaderVariables.cginc include
+// sees our correct definition.
+#include "Packages/com.unity.render-pipelines.core/ShaderLibrary/Common.hlsl"
+#undef GLOBAL_CBUFFER_START
+#undef GLOBAL_CBUFFER_END
+#if defined(UNITY_STEREO_MULTIVIEW_ENABLED) || ((defined(UNITY_SINGLE_PASS_STEREO) || defined(UNITY_STEREO_INSTANCING_ENABLED)) && (defined(SHADER_API_GLCORE) || defined(SHADER_API_GLES3) || defined(SHADER_API_METAL)))
+    #define GLOBAL_CBUFFER_START(name)    cbuffer name {
+    #define GLOBAL_CBUFFER_END            }
+#else
+    #define GLOBAL_CBUFFER_START(name)    CBUFFER_START(name)
+    #define GLOBAL_CBUFFER_END            CBUFFER_END
+#endif
 #include "Packages/com.unity.shadergraph/Editor/Generation/Targets/BuiltIn/ShaderLibrary/Shim/Shims.hlsl"
 #include "Packages/com.unity.render-pipelines.core/ShaderLibrary/Color.hlsl"
+// patched: Core.hlsl (below) pulls in ShaderVariablesFunctions.hlsl, which - when
+// UNITY_SINGLE_PASS_STEREO is defined (true for any XR-capable build target) - redeclares
+// TransformStereoScreenSpaceTex() as a real function. Shims.hlsl already pulled in Unity's own
+// UnityCG.cginc above, which declares a byte-identical function of the same name under the same
+// condition, so this is a flat redefinition error. This skybox never calls either function (it's
+// boilerplate from the Shader Graph target template, not skybox-specific code), so it's safe to
+// briefly hide UNITY_SINGLE_PASS_STEREO from just this one include: ShaderVariablesFunctions.hlsl
+// then takes its non-stereo branch and skips its copy, while everything else it defines is still
+// included normally.
+#if defined(UNITY_SINGLE_PASS_STEREO)
+    #undef UNITY_SINGLE_PASS_STEREO
+    #define RESTORE_UNITY_SINGLE_PASS_STEREO_AFTER_CORE_HLSL
+#endif
 #include "Packages/com.unity.shadergraph/Editor/Generation/Targets/BuiltIn/ShaderLibrary/Core.hlsl"
+#if defined(RESTORE_UNITY_SINGLE_PASS_STEREO_AFTER_CORE_HLSL)
+    #undef RESTORE_UNITY_SINGLE_PASS_STEREO_AFTER_CORE_HLSL
+    #define UNITY_SINGLE_PASS_STEREO
+#endif
+// patched: com.unity.render-pipelines.core's Common.hlsl (pulled in by the Core.hlsl include
+// above) redefines GLOBAL_CBUFFER_START to take a (name, register) pair for SRP ray tracing.
+// Unity's own Built-in UnityShaderVariables.cginc - included transitively below via
+// Lighting.hlsl - still calls the classic single-argument GLOBAL_CBUFFER_START(UnityStereoGlobals),
+// which is exactly the "too few arguments to a macro call" compile error. Restore the original
+// single-argument Built-in RP definition before anything else needs it.
+#undef GLOBAL_CBUFFER_START
+#undef GLOBAL_CBUFFER_END
+#if defined(UNITY_STEREO_MULTIVIEW_ENABLED) || ((defined(UNITY_SINGLE_PASS_STEREO) || defined(UNITY_STEREO_INSTANCING_ENABLED)) && (defined(SHADER_API_GLCORE) || defined(SHADER_API_GLES3) || defined(SHADER_API_METAL)))
+    #define GLOBAL_CBUFFER_START(name)    cbuffer name {
+    #define GLOBAL_CBUFFER_END            }
+#else
+    #define GLOBAL_CBUFFER_START(name)    CBUFFER_START(name)
+    #define GLOBAL_CBUFFER_END            CBUFFER_END
+#endif
 #include "Packages/com.unity.render-pipelines.core/ShaderLibrary/Texture.hlsl"
 #include "Packages/com.unity.shadergraph/Editor/Generation/Targets/BuiltIn/ShaderLibrary/Lighting.hlsl"
 #include "Packages/com.unity.shadergraph/Editor/Generation/Targets/BuiltIn/Editor/ShaderGraph/Includes/LegacySurfaceVertex.hlsl"
@@ -1880,9 +1978,58 @@ HLSLPROGRAM
 /* WARNING: $splice Could not find named fragment 'sgci_CustomInterpolatorPreInclude' */
 
 // Includes
+// patched: Shims.hlsl (below) itself includes Common.hlsl (which redefines GLOBAL_CBUFFER_START
+// to a 2-argument SRP ray-tracing form) and then UnityShaderVariables.cginc (which still calls
+// the classic single-argument form) BACK TO BACK internally - so patching *after* Shims.hlsl is
+// too late, the damage and the crash happen inside it. Pre-include Common.hlsl ourselves so its
+// include guard is already set, restore the single-argument macro, then let Shims.hlsl's own
+// "#include Common.hlsl" become a no-op (guarded) while its UnityShaderVariables.cginc include
+// sees our correct definition.
+#include "Packages/com.unity.render-pipelines.core/ShaderLibrary/Common.hlsl"
+#undef GLOBAL_CBUFFER_START
+#undef GLOBAL_CBUFFER_END
+#if defined(UNITY_STEREO_MULTIVIEW_ENABLED) || ((defined(UNITY_SINGLE_PASS_STEREO) || defined(UNITY_STEREO_INSTANCING_ENABLED)) && (defined(SHADER_API_GLCORE) || defined(SHADER_API_GLES3) || defined(SHADER_API_METAL)))
+    #define GLOBAL_CBUFFER_START(name)    cbuffer name {
+    #define GLOBAL_CBUFFER_END            }
+#else
+    #define GLOBAL_CBUFFER_START(name)    CBUFFER_START(name)
+    #define GLOBAL_CBUFFER_END            CBUFFER_END
+#endif
 #include "Packages/com.unity.shadergraph/Editor/Generation/Targets/BuiltIn/ShaderLibrary/Shim/Shims.hlsl"
 #include "Packages/com.unity.render-pipelines.core/ShaderLibrary/Color.hlsl"
+// patched: Core.hlsl (below) pulls in ShaderVariablesFunctions.hlsl, which - when
+// UNITY_SINGLE_PASS_STEREO is defined (true for any XR-capable build target) - redeclares
+// TransformStereoScreenSpaceTex() as a real function. Shims.hlsl already pulled in Unity's own
+// UnityCG.cginc above, which declares a byte-identical function of the same name under the same
+// condition, so this is a flat redefinition error. This skybox never calls either function (it's
+// boilerplate from the Shader Graph target template, not skybox-specific code), so it's safe to
+// briefly hide UNITY_SINGLE_PASS_STEREO from just this one include: ShaderVariablesFunctions.hlsl
+// then takes its non-stereo branch and skips its copy, while everything else it defines is still
+// included normally.
+#if defined(UNITY_SINGLE_PASS_STEREO)
+    #undef UNITY_SINGLE_PASS_STEREO
+    #define RESTORE_UNITY_SINGLE_PASS_STEREO_AFTER_CORE_HLSL
+#endif
 #include "Packages/com.unity.shadergraph/Editor/Generation/Targets/BuiltIn/ShaderLibrary/Core.hlsl"
+#if defined(RESTORE_UNITY_SINGLE_PASS_STEREO_AFTER_CORE_HLSL)
+    #undef RESTORE_UNITY_SINGLE_PASS_STEREO_AFTER_CORE_HLSL
+    #define UNITY_SINGLE_PASS_STEREO
+#endif
+// patched: com.unity.render-pipelines.core's Common.hlsl (pulled in by the Core.hlsl include
+// above) redefines GLOBAL_CBUFFER_START to take a (name, register) pair for SRP ray tracing.
+// Unity's own Built-in UnityShaderVariables.cginc - included transitively below via
+// Lighting.hlsl - still calls the classic single-argument GLOBAL_CBUFFER_START(UnityStereoGlobals),
+// which is exactly the "too few arguments to a macro call" compile error. Restore the original
+// single-argument Built-in RP definition before anything else needs it.
+#undef GLOBAL_CBUFFER_START
+#undef GLOBAL_CBUFFER_END
+#if defined(UNITY_STEREO_MULTIVIEW_ENABLED) || ((defined(UNITY_SINGLE_PASS_STEREO) || defined(UNITY_STEREO_INSTANCING_ENABLED)) && (defined(SHADER_API_GLCORE) || defined(SHADER_API_GLES3) || defined(SHADER_API_METAL)))
+    #define GLOBAL_CBUFFER_START(name)    cbuffer name {
+    #define GLOBAL_CBUFFER_END            }
+#else
+    #define GLOBAL_CBUFFER_START(name)    CBUFFER_START(name)
+    #define GLOBAL_CBUFFER_END            CBUFFER_END
+#endif
 #include "Packages/com.unity.render-pipelines.core/ShaderLibrary/Texture.hlsl"
 #include "Packages/com.unity.shadergraph/Editor/Generation/Targets/BuiltIn/ShaderLibrary/Lighting.hlsl"
 #include "Packages/com.unity.shadergraph/Editor/Generation/Targets/BuiltIn/Editor/ShaderGraph/Includes/LegacySurfaceVertex.hlsl"
@@ -2272,9 +2419,58 @@ HLSLPROGRAM
 /* WARNING: $splice Could not find named fragment 'sgci_CustomInterpolatorPreInclude' */
 
 // Includes
+// patched: Shims.hlsl (below) itself includes Common.hlsl (which redefines GLOBAL_CBUFFER_START
+// to a 2-argument SRP ray-tracing form) and then UnityShaderVariables.cginc (which still calls
+// the classic single-argument form) BACK TO BACK internally - so patching *after* Shims.hlsl is
+// too late, the damage and the crash happen inside it. Pre-include Common.hlsl ourselves so its
+// include guard is already set, restore the single-argument macro, then let Shims.hlsl's own
+// "#include Common.hlsl" become a no-op (guarded) while its UnityShaderVariables.cginc include
+// sees our correct definition.
+#include "Packages/com.unity.render-pipelines.core/ShaderLibrary/Common.hlsl"
+#undef GLOBAL_CBUFFER_START
+#undef GLOBAL_CBUFFER_END
+#if defined(UNITY_STEREO_MULTIVIEW_ENABLED) || ((defined(UNITY_SINGLE_PASS_STEREO) || defined(UNITY_STEREO_INSTANCING_ENABLED)) && (defined(SHADER_API_GLCORE) || defined(SHADER_API_GLES3) || defined(SHADER_API_METAL)))
+    #define GLOBAL_CBUFFER_START(name)    cbuffer name {
+    #define GLOBAL_CBUFFER_END            }
+#else
+    #define GLOBAL_CBUFFER_START(name)    CBUFFER_START(name)
+    #define GLOBAL_CBUFFER_END            CBUFFER_END
+#endif
 #include "Packages/com.unity.shadergraph/Editor/Generation/Targets/BuiltIn/ShaderLibrary/Shim/Shims.hlsl"
 #include "Packages/com.unity.render-pipelines.core/ShaderLibrary/Color.hlsl"
+// patched: Core.hlsl (below) pulls in ShaderVariablesFunctions.hlsl, which - when
+// UNITY_SINGLE_PASS_STEREO is defined (true for any XR-capable build target) - redeclares
+// TransformStereoScreenSpaceTex() as a real function. Shims.hlsl already pulled in Unity's own
+// UnityCG.cginc above, which declares a byte-identical function of the same name under the same
+// condition, so this is a flat redefinition error. This skybox never calls either function (it's
+// boilerplate from the Shader Graph target template, not skybox-specific code), so it's safe to
+// briefly hide UNITY_SINGLE_PASS_STEREO from just this one include: ShaderVariablesFunctions.hlsl
+// then takes its non-stereo branch and skips its copy, while everything else it defines is still
+// included normally.
+#if defined(UNITY_SINGLE_PASS_STEREO)
+    #undef UNITY_SINGLE_PASS_STEREO
+    #define RESTORE_UNITY_SINGLE_PASS_STEREO_AFTER_CORE_HLSL
+#endif
 #include "Packages/com.unity.shadergraph/Editor/Generation/Targets/BuiltIn/ShaderLibrary/Core.hlsl"
+#if defined(RESTORE_UNITY_SINGLE_PASS_STEREO_AFTER_CORE_HLSL)
+    #undef RESTORE_UNITY_SINGLE_PASS_STEREO_AFTER_CORE_HLSL
+    #define UNITY_SINGLE_PASS_STEREO
+#endif
+// patched: com.unity.render-pipelines.core's Common.hlsl (pulled in by the Core.hlsl include
+// above) redefines GLOBAL_CBUFFER_START to take a (name, register) pair for SRP ray tracing.
+// Unity's own Built-in UnityShaderVariables.cginc - included transitively below via
+// Lighting.hlsl - still calls the classic single-argument GLOBAL_CBUFFER_START(UnityStereoGlobals),
+// which is exactly the "too few arguments to a macro call" compile error. Restore the original
+// single-argument Built-in RP definition before anything else needs it.
+#undef GLOBAL_CBUFFER_START
+#undef GLOBAL_CBUFFER_END
+#if defined(UNITY_STEREO_MULTIVIEW_ENABLED) || ((defined(UNITY_SINGLE_PASS_STEREO) || defined(UNITY_STEREO_INSTANCING_ENABLED)) && (defined(SHADER_API_GLCORE) || defined(SHADER_API_GLES3) || defined(SHADER_API_METAL)))
+    #define GLOBAL_CBUFFER_START(name)    cbuffer name {
+    #define GLOBAL_CBUFFER_END            }
+#else
+    #define GLOBAL_CBUFFER_START(name)    CBUFFER_START(name)
+    #define GLOBAL_CBUFFER_END            CBUFFER_END
+#endif
 #include "Packages/com.unity.render-pipelines.core/ShaderLibrary/Texture.hlsl"
 #include "Packages/com.unity.shadergraph/Editor/Generation/Targets/BuiltIn/ShaderLibrary/Lighting.hlsl"
 #include "Packages/com.unity.shadergraph/Editor/Generation/Targets/BuiltIn/Editor/ShaderGraph/Includes/LegacySurfaceVertex.hlsl"
