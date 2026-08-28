@@ -34,9 +34,10 @@ namespace ConstellationObservation
 
         [Range(0f, 1f)]
         [Tooltip("BGM volume multiplier while narration is playing.")]
-        public float duckedVolumeMultiplier = 0.25f;
+        public float duckedVolumeMultiplier = 0.12f;
 
-        public float duckSpeed = 2f;
+        [Tooltip("How fast the duck transition happens (higher = snappier). At 6, a full duck takes ~1/6s so BGM doesn't bleed over the start of the narration.")]
+        public float duckSpeed = 6f;
 
         private int lastIndex = -1;
         private float currentMultiplier = 1f;

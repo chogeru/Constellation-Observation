@@ -27,15 +27,25 @@ namespace ConstellationObservation
         [Tooltip("How long the cube grow/shrink animation takes, in seconds.")]
         public float cubeAnimDuration = 0.4f;
 
+        [Tooltip("How strongly the cubes overshoot and settle as they appear (0 = no overshoot).")]
+        public float cubeShowOvershoot = 1.4f;
+
         [Tooltip("The cubes' normal (fully shown) scale. Fixed here instead of being read from the "
             + "transform at runtime, since that reads whatever scale happened to be set at the moment "
             + "Start() ran and could race against an early StartPlanetMode/StartConstellationMode call.")]
         public Vector3 cubeFullScale = new Vector3(0.6f, 0.6f, 0.6f);
 
-        // 0 = hidden, 1 = shown, animating toward animTarget
-        private float animT = 1f;
-        private float animTarget = 1f;
+        // 0 = hidden, 1 = shown; currentFraction is the last displayed value, used as the tween's
+        // start point so interrupting a show/hide mid-flight restarts smoothly from where it is.
+        private float currentFraction = 1f;
+        private float animStart = 1f;
+        private float animEnd = 1f;
+        private float animElapsed = 0f;
         private bool animating = false;
+
+        // Guards against a cube being interacted with twice (e.g. double-click while it's
+        // still shrinking) from starting a second, overlapping tour.
+        private bool tourInProgress = false;
 
         private void Start()
         {
@@ -48,14 +58,19 @@ namespace ConstellationObservation
         {
             if (!animating) return;
 
-            float step = Time.deltaTime / Mathf.Max(cubeAnimDuration, 0.01f);
-            animT = Mathf.MoveTowards(animT, animTarget, step);
-            ApplyCubeScale(animT);
+            animElapsed += Time.deltaTime;
+            float t = Mathf.Clamp01(animElapsed / Mathf.Max(cubeAnimDuration, 0.01f));
+            bool showing = animEnd > animStart;
+            float e = showing ? TweenEase.OutBack(t, cubeShowOvershoot) : TweenEase.InCubic(t);
+            currentFraction = Mathf.LerpUnclamped(animStart, animEnd, e);
+            ApplyCubeScale(currentFraction);
 
-            if (Mathf.Approximately(animT, animTarget))
+            if (t >= 1f)
             {
                 animating = false;
-                if (animTarget <= 0f)
+                currentFraction = animEnd;
+                ApplyCubeScale(currentFraction);
+                if (animEnd <= 0f)
                 {
                     if (planetCube != null) planetCube.SetActive(false);
                     if (constellationCube != null) constellationCube.SetActive(false);
@@ -72,15 +87,17 @@ namespace ConstellationObservation
         private void SetCubesActiveImmediate(bool active)
         {
             animating = false;
-            animT = active ? 1f : 0f;
-            animTarget = animT;
+            currentFraction = active ? 1f : 0f;
             if (planetCube != null) { planetCube.SetActive(active); }
             if (constellationCube != null) { constellationCube.SetActive(active); }
-            ApplyCubeScale(animT);
+            ApplyCubeScale(currentFraction);
         }
 
         public void StartPlanetMode()
         {
+            if (tourInProgress) return;
+            tourInProgress = true;
+
             HideCubes();
             if (solarSystemRoot != null) solarSystemRoot.SetActive(true);
             if (constellationsRoot != null) constellationsRoot.SetActive(false);
@@ -89,6 +106,9 @@ namespace ConstellationObservation
 
         public void StartConstellationMode()
         {
+            if (tourInProgress) return;
+            tourInProgress = true;
+
             HideCubes();
             if (solarSystemRoot != null) solarSystemRoot.SetActive(false);
             if (constellationsRoot != null) constellationsRoot.SetActive(true);
@@ -97,11 +117,13 @@ namespace ConstellationObservation
 
         public void OnPlanetTourComplete()
         {
+            tourInProgress = false;
             ShowCubes();
         }
 
         public void OnConstellationTourComplete()
         {
+            tourInProgress = false;
             if (solarSystemRoot != null) solarSystemRoot.SetActive(true);
             if (constellationsRoot != null) constellationsRoot.SetActive(false);
             ShowCubes();
@@ -111,15 +133,19 @@ namespace ConstellationObservation
         {
             if (planetCube != null) planetCube.SetActive(true);
             if (constellationCube != null) constellationCube.SetActive(true);
-            animT = 0f;
-            animTarget = 1f;
-            ApplyCubeScale(animT);
+            currentFraction = 0f;
+            ApplyCubeScale(currentFraction);
+            animStart = 0f;
+            animEnd = 1f;
+            animElapsed = 0f;
             animating = true;
         }
 
         private void HideCubes()
         {
-            animTarget = 0f;
+            animStart = currentFraction;
+            animEnd = 0f;
+            animElapsed = 0f;
             animating = true;
         }
     }

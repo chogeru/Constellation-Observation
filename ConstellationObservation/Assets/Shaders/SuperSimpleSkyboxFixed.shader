@@ -95,9 +95,12 @@ HLSLPROGRAM
 
 // Pragmas
 #pragma target 3.0
-#pragma multi_compile_instancing
+// patched: multi_compile_instancing removed. A skybox is always drawn as a single full-screen
+// dome (never GPU-instanced), so this variant serves no purpose here, and compiling the
+// UNITY_ANY_INSTANCING_ENABLED + UNITY_STEREO_INSTANCING_ENABLED combination is exactly where
+// the Unity 2022.3 Built-in RP/Shader Graph GLOBAL_CBUFFER_START compiler bug under VR lives.
 #pragma multi_compile_fog
-#pragma multi_compile LIGHTMAP_ON __ // patched: multi_compile_fwdbase's LIGHTPROBE_SH+SHADOWS_SCREEN+stereo combo hits a Unity Built-in/ShaderGraph GLOBAL_CBUFFER_START compiler bug in VR; those keywords are never referenced in this shader's code so only LIGHTMAP_ON is kept
+#pragma multi_compile LIGHTMAP_ON __ // patched: multi_compile_fwdbase's LIGHTPROBE_SH+SHADOWS_SCREEN+stereo combo hits the same compiler bug; those keywords are never referenced in this shader's code so only LIGHTMAP_ON is kept
 #pragma vertex vert
 #pragma fragment frag
 
@@ -1302,7 +1305,17 @@ float _Branch_d287593791284b7eb2fffe9cd4549830_Out_3_Float;
 Unity_Branch_float(_Property_f0aaffe54631477da6d87bb465fdc074_Out_0_Boolean, _Smoothstep_2be9f89ad7484212a2cb66a65c33601e_Out_3_Float, 1, _Branch_d287593791284b7eb2fffe9cd4549830_Out_3_Float);
 float3 _Lerp_049a91f07cf94e11ad676bbe94e29a2d_Out_3_Vector3;
 Unity_Lerp_float3((_Property_bb2a1119a3a94855934ae0c7d47269b8_Out_0_Vector4.xyz), _Lerp_b6948952958d4284b416d7db0c9ef85e_Out_3_Vector3, (_Branch_d287593791284b7eb2fffe9cd4549830_Out_3_Float.xxx), _Lerp_049a91f07cf94e11ad676bbe94e29a2d_Out_3_Vector3);
-surface.BaseColor = _Lerp_049a91f07cf94e11ad676bbe94e29a2d_Out_3_Vector3;
+// patched: with Sun/Moon/Clouds/Ground all disabled in this material, some of the generated
+// graph math (division in the sun falloff terms) evaluates to NaN even though its branch is
+// "off" - IEEE float multiply-by-zero on a NaN is still NaN, so it can silently poison the
+// final lerp and the whole sky renders solid white in the Player even though the Editor
+// preview doesn't show it. Sanitize before output.
+float3 _FinalSkyColor_Safe = _Lerp_049a91f07cf94e11ad676bbe94e29a2d_Out_3_Vector3;
+if (any(isnan(_FinalSkyColor_Safe)) || any(isinf(_FinalSkyColor_Safe)))
+{
+    _FinalSkyColor_Safe = float3(0.01, 0.01, 0.02);
+}
+surface.BaseColor = _FinalSkyColor_Safe;
 return surface;
 }
 

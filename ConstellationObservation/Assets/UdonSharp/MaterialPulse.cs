@@ -22,9 +22,23 @@ namespace ConstellationObservation
         public float maxMultiplier = 1.3f;
         public float pulseSpeed = 0.8f;
 
+        [Tooltip("How long a triggered flash (see TriggerFlash) takes to decay back into the normal pulse.")]
+        public float flashDecay = 0.5f;
+
+        private float flashTimer;
+        private float flashPeakMultiplier;
+
         private void Start()
         {
             if (targetMaterial != null) targetMaterial.EnableKeyword("_EMISSION");
+        }
+
+        /// Briefly boosts the emission above the normal pulse range, then eases back in - a one-shot
+        /// "sparkle" cue callable from other scripts (e.g. when a new constellation reveals).
+        public void TriggerFlash(float peakMultiplier)
+        {
+            flashPeakMultiplier = peakMultiplier;
+            flashTimer = flashDecay;
         }
 
         private void Update()
@@ -33,6 +47,14 @@ namespace ConstellationObservation
             float t = (float)Networking.GetServerTimeInSeconds();
             float wave = (Mathf.Sin(t * pulseSpeed) + 1f) * 0.5f;
             float mult = Mathf.Lerp(minMultiplier, maxMultiplier, wave);
+
+            if (flashTimer > 0f)
+            {
+                flashTimer -= Time.deltaTime;
+                float flashT = Mathf.Clamp01(flashTimer / flashDecay);
+                mult = Mathf.Lerp(mult, flashPeakMultiplier, flashT);
+            }
+
             targetMaterial.SetColor("_EmissionColor", baseEmission * mult);
         }
     }
