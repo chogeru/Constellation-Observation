@@ -35,6 +35,19 @@ namespace ConstellationObservation
         [Tooltip("One narration clip per target, same order/length as Targets. Leave an entry empty to fall back to Fallback Duration for that planet.")]
         public AudioClip[] narrationClips;
 
+        [Header("Subtitles (auto-timed to narration clip pauses)")]
+        [Tooltip("All subtitle clauses across every planet, flattened in order. Populated by 'Sync From Library'.")]
+        public string[] subtitleLines;
+
+        [Tooltip("Start time (seconds from that planet's narration clip start) for each entry in Subtitle Lines, same order/length.")]
+        public float[] subtitleStartTimes;
+
+        [Tooltip("How many consecutive entries in Subtitle Lines belong to each planet, same order/length as Targets.")]
+        public int[] subtitleCounts;
+
+        [Tooltip("Caption HUD that displays subtitles while narration plays. Optional - leave empty to disable subtitles.")]
+        public SubtitleDisplay subtitleDisplay;
+
         [Tooltip("How long to show a planet if it has no narration clip assigned.")]
         public float fallbackDuration = 6f;
 
@@ -231,12 +244,36 @@ namespace ConstellationObservation
                 audioSource.clip = narrationClips[currentIndex];
                 audioSource.Play();
                 wait = narrationClips[currentIndex].length + narrationCooldown;
+
+                PlaySubtitlesFor(currentIndex, narrationClips[currentIndex].length);
             }
 
             // Make sure the reveal (glide + flash) never gets cut off by a very short narration clip.
             if (bringToFront && wait < moveInDuration + 0.5f) wait = moveInDuration + 0.5f;
 
             SendCustomEventDelayedSeconds(nameof(Advance), wait);
+        }
+
+        // Slices this planet's clauses out of the flattened Subtitle Lines/Start Times arrays
+        // (using Subtitle Counts to find its run) and hands them to the caption HUD.
+        private void PlaySubtitlesFor(int planetIndex, float clipLength)
+        {
+            if (subtitleDisplay == null || subtitleCounts == null || planetIndex >= subtitleCounts.Length) return;
+
+            int start = 0;
+            for (int i = 0; i < planetIndex; i++) start += subtitleCounts[i];
+            int count = subtitleCounts[planetIndex];
+            if (count <= 0 || subtitleLines == null || subtitleStartTimes == null || start + count > subtitleLines.Length) return;
+
+            string[] lines = new string[count];
+            float[] times = new float[count];
+            for (int i = 0; i < count; i++)
+            {
+                lines[i] = subtitleLines[start + i];
+                times[i] = subtitleStartTimes[start + i];
+            }
+
+            subtitleDisplay.PlaySequence(lines, times, clipLength);
         }
 
         private void BeginMoveIn(Transform current)

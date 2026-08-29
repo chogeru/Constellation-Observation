@@ -45,6 +45,9 @@ namespace ConstellationObservation.EditorTools
                         Undo.RecordObject(controller, "Sync Constellation Library");
                         controller.constellations = (GameObject[])libRef.library.targets.Clone();
                         controller.narrationClips = (AudioClip[])libRef.library.narrationClips.Clone();
+                        controller.subtitleLines = (string[])libRef.library.subtitleLines.Clone();
+                        controller.subtitleStartTimes = (float[])libRef.library.subtitleStartTimes.Clone();
+                        controller.subtitleCounts = (int[])libRef.library.subtitleCounts.Clone();
                         EditorUtility.SetDirty(controller);
                     }
                 }

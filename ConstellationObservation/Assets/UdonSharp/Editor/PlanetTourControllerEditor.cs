@@ -47,6 +47,9 @@ namespace ConstellationObservation.EditorTools
                         controller.planetNames = (string[])libRef.library.planetNames.Clone();
                         controller.highlightLights = (Light[])libRef.library.highlightLights.Clone();
                         controller.narrationClips = (AudioClip[])libRef.library.narrationClips.Clone();
+                        controller.subtitleLines = (string[])libRef.library.subtitleLines.Clone();
+                        controller.subtitleStartTimes = (float[])libRef.library.subtitleStartTimes.Clone();
+                        controller.subtitleCounts = (int[])libRef.library.subtitleCounts.Clone();
                         EditorUtility.SetDirty(controller);
                     }
                 }

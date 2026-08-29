@@ -26,6 +26,19 @@ namespace ConstellationObservation
         [Tooltip("One narration clip per constellation, same order/length as Constellations. Leave an entry empty to fall back to Fallback Duration for that constellation.")]
         public AudioClip[] narrationClips;
 
+        [Header("Subtitles (auto-timed to narration clip pauses)")]
+        [Tooltip("All subtitle clauses across every constellation, flattened in order. Populated by 'Sync From Library'.")]
+        public string[] subtitleLines;
+
+        [Tooltip("Start time (seconds from that constellation's narration clip start) for each entry in Subtitle Lines, same order/length.")]
+        public float[] subtitleStartTimes;
+
+        [Tooltip("How many consecutive entries in Subtitle Lines belong to each constellation, same order/length as Constellations.")]
+        public int[] subtitleCounts;
+
+        [Tooltip("Caption HUD that displays subtitles while narration plays. Optional - leave empty to disable subtitles.")]
+        public SubtitleDisplay subtitleDisplay;
+
         [Tooltip("How long to show a constellation if it has no narration clip assigned.")]
         public float fallbackDuration = 8f;
 
@@ -158,6 +171,8 @@ namespace ConstellationObservation
                 audioSource.clip = narrationClips[currentIndex];
                 audioSource.Play();
                 wait = narrationClips[currentIndex].length + narrationCooldown;
+
+                PlaySubtitlesFor(currentIndex, narrationClips[currentIndex].length);
             }
 
             // Make sure the reveal (pop-in, then star-by-star line draw) never gets cut off by a short narration clip.
@@ -165,6 +180,28 @@ namespace ConstellationObservation
             if (wait < minWait) wait = minWait;
 
             SendCustomEventDelayedSeconds(nameof(Advance), wait);
+        }
+
+        // Slices this constellation's clauses out of the flattened Subtitle Lines/Start Times
+        // arrays (using Subtitle Counts to find its run) and hands them to the caption HUD.
+        private void PlaySubtitlesFor(int constellationIndex, float clipLength)
+        {
+            if (subtitleDisplay == null || subtitleCounts == null || constellationIndex >= subtitleCounts.Length) return;
+
+            int start = 0;
+            for (int i = 0; i < constellationIndex; i++) start += subtitleCounts[i];
+            int count = subtitleCounts[constellationIndex];
+            if (count <= 0 || subtitleLines == null || subtitleStartTimes == null || start + count > subtitleLines.Length) return;
+
+            string[] lines = new string[count];
+            float[] times = new float[count];
+            for (int i = 0; i < count; i++)
+            {
+                lines[i] = subtitleLines[start + i];
+                times[i] = subtitleStartTimes[start + i];
+            }
+
+            subtitleDisplay.PlaySequence(lines, times, clipLength);
         }
 
         private void BeginReveal(Transform target, Vector3 targetScale)
