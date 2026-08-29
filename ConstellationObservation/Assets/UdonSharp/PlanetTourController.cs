@@ -54,6 +54,8 @@ namespace ConstellationObservation
         [Tooltip("Single shared label shown only above whichever planet is currently being explained.")]
         public UnityEngine.UI.Text nameLabel;
         public Vector3 nameLabelOffset = new Vector3(0f, 1.5f, 0f);
+        [Tooltip("Label scale at the start of its fade-in (multiplier of its authored scale), so it settles in with a bit of pop instead of just appearing.")]
+        public float nameLabelStartScale = 0.6f;
 
         [Header("Bring Planet In Front")]
         [Tooltip("Move the current planet in front of the player while it's being presented.")]
@@ -73,6 +75,9 @@ namespace ConstellationObservation
         public float arrivalOvershoot = 0.4f;
         [Tooltip("Peak scale multiplier applied to the planet as it lands, for a bit of punch.")]
         public float arrivalScalePunch = 1.04f;
+
+        [Tooltip("Small one-shot particle puff played at the spot a planet settles back into orbit.")]
+        public ParticleSystem departurePuff;
 
         public ExperienceManager manager;
 
@@ -114,6 +119,12 @@ namespace ConstellationObservation
         // Arrival flash state (decays into the normal pulse).
         private float flashTimer;
 
+        // Name label fade/scale-in state (captured once so we know its authored/"full" scale).
+        private Vector3 nameLabelBaseScale;
+        private bool nameLabelBaseScaleCaptured;
+        private bool outLabelActive;
+        private float outLabelStartAlpha;
+
         // The next planet waits until the previous one has fully returned home (outActive finishes)
         // before it starts flying in - otherwise the two can visibly overlap/clip through each other
         // near the presentation spot, and the new narration can start before the old one has settled.
@@ -124,6 +135,7 @@ namespace ConstellationObservation
             inActive = false;
             outActive = false;
             pendingIncoming = false;
+            outLabelActive = false;
             HideCurrentImmediate();
             currentIndex = -1;
             CaptureOriginalPositions();
@@ -189,8 +201,18 @@ namespace ConstellationObservation
 
             if (nameLabel != null)
             {
+                if (!nameLabelBaseScaleCaptured)
+                {
+                    nameLabelBaseScale = nameLabel.transform.localScale;
+                    nameLabelBaseScaleCaptured = true;
+                }
                 if (planetNames != null && currentIndex < planetNames.Length) nameLabel.text = planetNames[currentIndex];
+                Color c = nameLabel.color;
+                c.a = 0f;
+                nameLabel.color = c;
+                nameLabel.transform.localScale = nameLabelBaseScale * nameLabelStartScale;
                 nameLabel.gameObject.SetActive(true);
+                outLabelActive = false;
             }
 
             if (bringToFront)
@@ -275,7 +297,11 @@ namespace ConstellationObservation
                 if (inTrail != null) inTrail.emitting = false;
             }
 
-            if (nameLabel != null) nameLabel.gameObject.SetActive(false);
+            if (nameLabel != null && nameLabel.gameObject.activeSelf)
+            {
+                outLabelActive = true;
+                outLabelStartAlpha = nameLabel.color.a;
+            }
 
             if (bringToFront && activeTarget != null && originalLocalPositions != null
                 && currentIndex >= 0 && currentIndex < originalLocalPositions.Length)
@@ -339,6 +365,14 @@ namespace ConstellationObservation
                 if (nameLabel != null)
                 {
                     nameLabel.transform.position = inTransform.position + Vector3.up * (inRadius + 1.2f);
+
+                    // Label fades and scales in alongside the planet's own arrival, using the same
+                    // clamped easing curve so it settles with a matching bit of pop.
+                    float labelE = Mathf.Clamp01(e);
+                    Color c = nameLabel.color;
+                    c.a = labelE;
+                    nameLabel.color = c;
+                    nameLabel.transform.localScale = Vector3.LerpUnclamped(nameLabelBaseScale * nameLabelStartScale, nameLabelBaseScale, e);
                 }
 
                 // Stop emitting before the overshoot settle: EaseOutBack briefly reverses direction
@@ -351,6 +385,14 @@ namespace ConstellationObservation
                     inTransform.localScale = inPresentationScale;
                     inActive = false;
                     flashTimer = arrivalFlashDecay;
+
+                    if (nameLabel != null)
+                    {
+                        Color c = nameLabel.color;
+                        c.a = 1f;
+                        nameLabel.color = c;
+                        nameLabel.transform.localScale = nameLabelBaseScale;
+                    }
                 }
             }
 
@@ -363,13 +405,39 @@ namespace ConstellationObservation
                 outTransform.localScale = Vector3.Lerp(outScaleStart, outScaleEnd, e);
                 if (outLight != null) outLight.intensity = Mathf.Lerp(outLightStartIntensity, 0f, e);
 
+                if (outLabelActive && nameLabel != null)
+                {
+                    Color c = nameLabel.color;
+                    c.a = Mathf.Lerp(outLabelStartAlpha, 0f, e);
+                    nameLabel.color = c;
+                }
+
                 if (t >= 1f)
                 {
                     outTransform.localPosition = outEndLocalPos;
                     outTransform.localScale = outScaleEnd;
                     if (outLight != null) outLight.intensity = 0f;
                     if (outTrail != null) outTrail.emitting = false;
+                    if (departurePuff != null)
+                    {
+                        departurePuff.transform.position = outTransform.position;
+                        // Tint the puff to match this planet's own theme color (reusing the
+                        // highlight light's color, already set per-planet) instead of one
+                        // generic white puff for every planet.
+                        if (outLight != null)
+                        {
+                            ParticleSystem.MainModule puffMain = departurePuff.main;
+                            puffMain.startColor = new ParticleSystem.MinMaxGradient(outLight.color);
+                        }
+                        departurePuff.Clear();
+                        departurePuff.Play();
+                    }
                     if (outWasHidden) outTransform.gameObject.SetActive(false);
+                    if (outLabelActive && nameLabel != null)
+                    {
+                        nameLabel.gameObject.SetActive(false);
+                        outLabelActive = false;
+                    }
                     outActive = false;
                     outLight = null;
                     outTransform = null;

@@ -1,6 +1,7 @@
 
 using UnityEngine;
 using UdonSharp;
+using VRC.SDKBase;
 
 namespace ConstellationObservation
 {
@@ -15,6 +16,31 @@ namespace ConstellationObservation
         [Header("Selection Cubes")]
         public GameObject planetCube;
         public GameObject constellationCube;
+
+        [Tooltip("One-shot particle burst played when each cube reappears after a tour ends.")]
+        public ParticleSystem planetCubeBurst;
+        public ParticleSystem constellationCubeBurst;
+
+        [Tooltip("The cubes' own MaterialPulse - given a brief bright flash in sync with the burst so the cube itself looks like the source of the energy, not just a nearby particle effect.")]
+        public MaterialPulse planetCubePulse;
+        public MaterialPulse constellationCubePulse;
+        public float cubeReappearFlashMultiplier = 3.5f;
+
+        [Tooltip("Played when each cube shrinks away at the start of a tour - particles converge inward instead of bursting outward.")]
+        public ParticleSystem planetCubeCollapse;
+        public ParticleSystem constellationCubeCollapse;
+
+        [Header("Idle Float")]
+        [Tooltip("How far the cubes gently bob up and down while idle (waiting to be picked).")]
+        public float idleBobHeight = 0.03f;
+        public float idleBobSpeed = 1.1f;
+        [Tooltip("How fast the cubes slowly spin while idle.")]
+        public float idleSpinSpeed = 12f;
+
+        [Header("Ground Ring")]
+        [Tooltip("Ambient glow decal(s) that should stay under the local player's feet instead of sitting at one fixed spot.")]
+        public Transform[] groundRingFollowers;
+        public float groundRingOffset = 0.02f;
 
         [Header("Scene Roots")]
         public GameObject solarSystemRoot;
@@ -47,8 +73,14 @@ namespace ConstellationObservation
         // still shrinking) from starting a second, overlapping tour.
         private bool tourInProgress = false;
 
+        private Vector3 planetCubeBasePos;
+        private Vector3 constellationCubeBasePos;
+
         private void Start()
         {
+            if (planetCube != null) planetCubeBasePos = planetCube.transform.localPosition;
+            if (constellationCube != null) constellationCubeBasePos = constellationCube.transform.localPosition;
+
             SetCubesActiveImmediate(true);
             if (solarSystemRoot != null) solarSystemRoot.SetActive(true);
             if (constellationsRoot != null) constellationsRoot.SetActive(false);
@@ -56,6 +88,35 @@ namespace ConstellationObservation
 
         private void Update()
         {
+            // Gentle idle bob/spin while a cube is on screen, waiting to be picked - runs
+            // independently of the scale pop-in/out animation below (position/rotation vs scale).
+            if (planetCube != null && planetCube.activeSelf)
+            {
+                float bob = Mathf.Sin(Time.time * idleBobSpeed) * idleBobHeight;
+                planetCube.transform.localPosition = planetCubeBasePos + new Vector3(0f, bob, 0f);
+                planetCube.transform.localRotation = Quaternion.Euler(0f, Time.time * idleSpinSpeed, 0f);
+            }
+            if (constellationCube != null && constellationCube.activeSelf)
+            {
+                float bob = Mathf.Sin(Time.time * idleBobSpeed + 1.7f) * idleBobHeight;
+                constellationCube.transform.localPosition = constellationCubeBasePos + new Vector3(0f, bob, 0f);
+                constellationCube.transform.localRotation = Quaternion.Euler(0f, Time.time * idleSpinSpeed, 0f);
+            }
+
+            if (groundRingFollowers != null)
+            {
+                VRCPlayerApi local = Networking.LocalPlayer;
+                if (Utilities.IsValid(local))
+                {
+                    Vector3 feet = local.GetPosition();
+                    Vector3 followPos = new Vector3(feet.x, feet.y + groundRingOffset, feet.z);
+                    for (int i = 0; i < groundRingFollowers.Length; i++)
+                    {
+                        if (groundRingFollowers[i] != null) groundRingFollowers[i].position = followPos;
+                    }
+                }
+            }
+
             if (!animating) return;
 
             animElapsed += Time.deltaTime;
@@ -139,6 +200,11 @@ namespace ConstellationObservation
             animEnd = 1f;
             animElapsed = 0f;
             animating = true;
+
+            if (planetCubeBurst != null) { planetCubeBurst.Clear(); planetCubeBurst.Play(); }
+            if (constellationCubeBurst != null) { constellationCubeBurst.Clear(); constellationCubeBurst.Play(); }
+            if (planetCubePulse != null) planetCubePulse.TriggerFlash(cubeReappearFlashMultiplier);
+            if (constellationCubePulse != null) constellationCubePulse.TriggerFlash(cubeReappearFlashMultiplier);
         }
 
         private void HideCubes()
@@ -147,6 +213,9 @@ namespace ConstellationObservation
             animEnd = 0f;
             animElapsed = 0f;
             animating = true;
+
+            if (planetCubeCollapse != null) { planetCubeCollapse.Clear(); planetCubeCollapse.Play(); }
+            if (constellationCubeCollapse != null) { constellationCubeCollapse.Clear(); constellationCubeCollapse.Play(); }
         }
     }
 }

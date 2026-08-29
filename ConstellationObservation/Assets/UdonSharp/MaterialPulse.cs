@@ -18,6 +18,12 @@ namespace ConstellationObservation
         public Material targetMaterial;
         public Color baseEmission = Color.white;
 
+        [Tooltip("Optional extra materials pulsing in the same wave as targetMaterial, each with its own peak color - lets a group of shared materials (e.g. gold/silver/blue star variants) breathe in sync without needing a separate pulser per color.")]
+        public Material targetMaterial2;
+        public Color baseEmission2 = Color.white;
+        public Material targetMaterial3;
+        public Color baseEmission3 = Color.white;
+
         public float minMultiplier = 0.7f;
         public float maxMultiplier = 1.3f;
         public float pulseSpeed = 0.8f;
@@ -31,6 +37,8 @@ namespace ConstellationObservation
         private void Start()
         {
             if (targetMaterial != null) targetMaterial.EnableKeyword("_EMISSION");
+            if (targetMaterial2 != null) targetMaterial2.EnableKeyword("_EMISSION");
+            if (targetMaterial3 != null) targetMaterial3.EnableKeyword("_EMISSION");
         }
 
         /// Briefly boosts the emission above the normal pulse range, then eases back in - a one-shot
@@ -43,7 +51,6 @@ namespace ConstellationObservation
 
         private void Update()
         {
-            if (targetMaterial == null) return;
             float t = (float)Networking.GetServerTimeInSeconds();
             float wave = (Mathf.Sin(t * pulseSpeed) + 1f) * 0.5f;
             float mult = Mathf.Lerp(minMultiplier, maxMultiplier, wave);
@@ -55,7 +62,9 @@ namespace ConstellationObservation
                 mult = Mathf.Lerp(mult, flashPeakMultiplier, flashT);
             }
 
-            targetMaterial.SetColor("_EmissionColor", baseEmission * mult);
+            if (targetMaterial != null) targetMaterial.SetColor("_EmissionColor", baseEmission * mult);
+            if (targetMaterial2 != null) targetMaterial2.SetColor("_EmissionColor", baseEmission2 * mult);
+            if (targetMaterial3 != null) targetMaterial3.SetColor("_EmissionColor", baseEmission3 * mult);
         }
     }
 }

@@ -6,8 +6,11 @@ using VRC.SDKBase;
 namespace ConstellationObservation
 {
     /// <summary>
-    /// Gently rotates the object around its local up axis. Uses server time so every
-    /// client sees the same rotation without needing to network-sync a variable.
+    /// Gently rotates the object around its local up axis. Reads server time once at
+    /// startup (so every client starts from roughly the same angle) and then advances
+    /// with the smooth local Time.time each frame - calling GetServerTimeInSeconds()
+    /// every Update instead produces a visibly stepped/jerky rotation in VRChat, since
+    /// server time only advances in network-sync-sized increments rather than every frame.
     /// </summary>
     [UdonBehaviourSyncMode(BehaviourSyncMode.NoVariableSync)]
     public class SlowRotate : UdonSharpBehaviour
@@ -15,10 +18,19 @@ namespace ConstellationObservation
         [Tooltip("Degrees per second.")]
         public float degreesPerSecond = 3f;
 
+        private float startAngle;
+        private float startLocalTime;
+
+        private void Start()
+        {
+            startAngle = (float)Networking.GetServerTimeInSeconds() * degreesPerSecond;
+            startLocalTime = Time.time;
+        }
+
         private void Update()
         {
-            float t = (float)Networking.GetServerTimeInSeconds();
-            transform.localRotation = Quaternion.Euler(0f, t * degreesPerSecond, 0f);
+            float angle = startAngle + (Time.time - startLocalTime) * degreesPerSecond;
+            transform.localRotation = Quaternion.Euler(0f, angle, 0f);
         }
     }
 }
